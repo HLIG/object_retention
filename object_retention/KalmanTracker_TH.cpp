@@ -119,6 +119,7 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 							min_distance = distance;
 						}
 					}
+					n
 					if (min_distance < this->big_area_distance) {
 						//cout << "min_distance:" << min_distance << endl;
 						big_obejcts[j].contour_points.reserve(big_obejcts[j].contour_points.size()+ big_obejcts[i].contour_points.size());//将最后一个点集并到前面
