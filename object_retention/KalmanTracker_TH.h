@@ -1,5 +1,9 @@
 #pragma once
 #include"KalmanTracker.h"
+
+namespace hlg
+{
+
 /*下面为大件物品检测及跟踪的各种类*/
 class Contour_Point : public std::array<double, 2>//轮廓点
 {
@@ -72,12 +76,14 @@ private:
 	float distance_threshold;//距离阈值，如果小轮廓距离大轮廓的最小距离小于这个值，则将小物体归到大物体中
 	const double intersection_small_rate = 0.4;//最后对大物体合并的阈值
 	const double aspect_ratio_threshold = 4.0;//将不符合长宽比要求的检测框剔除
+    bool show_flag;//true则显示处理结果
 public:
 	std::vector<MyBigObejct>big_obejcts;
-	ThingKalmanTracker(const float &area_threshold = 3000.0, const float& small_area_threshold = 1000.0, const float& distance_threshold = 70.0);
+	ThingKalmanTracker(const float &area_threshold = 3000.0, const float& small_area_threshold = 1000.0, const float& distance_threshold = 70.0,bool show_flag=false);
 	~ThingKalmanTracker() {}
 	void ThingsDetector(const Mat &ForemaskImage);//根据前景图来把物体检测出来
 	void ThingBox_Filter();//根据一些自定义的规则，如长宽比，交并比等，对检测出来的前景框进行一些合并及删除
 	void Filter_People(const vector<Rect>&people_boxes) {}//根据iou把人头滤除掉
 };
 
+}

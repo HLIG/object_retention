@@ -1,5 +1,8 @@
 #include"KalmanTracker_TH.h"
 #include"kd_tree.h"
+namespace hlg
+{
+
 /*下面为大件物体的代码*/
 bool MyCompare_x(const cv::Point point1, const cv::Point point2) { return point1.x < point2.x; }
 bool MyCompare_y(const cv::Point point1, const cv::Point point2) { return point1.y < point2.y; }
@@ -41,18 +44,20 @@ void MyObejctBox::Update_Box(const std::vector<cv::Point>&points)
 		this->rect = Rect(this->x1, this->y1, (this->x3) - (this->x1) + 1, (this->y3) - (this->y1) + 1);
 	}
 }
-ThingKalmanTracker::ThingKalmanTracker(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold)
+ThingKalmanTracker::ThingKalmanTracker(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
 {
 	this->big_area_threshold = big_area_threshold;
 	this->small_area_threshold = small_area_threshold;
 	this->distance_threshold = distance_threshold;
+    this->show_flag = show_flag;
 }
 void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 {
+    
 	//首先初始化MyBigObejcts
 	this->big_obejcts.clear();
-	clock_t start_time;
-	start_time = clock();
+	//clock_t start_time;
+	//start_time = clock();
 	//阈值化，将非纯白色（244~255）的所有像素设为0 将影子去掉
 	Mat final_foremask;
 	cv::threshold(ForemaskImage, final_foremask, 244, 255, cv::THRESH_BINARY);
@@ -119,7 +124,6 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 							min_distance = distance;
 						}
 					}
-					n
 					if (min_distance < this->big_area_distance) {
 						//cout << "min_distance:" << min_distance << endl;
 						big_obejcts[j].contour_points.reserve(big_obejcts[j].contour_points.size()+ big_obejcts[i].contour_points.size());//将最后一个点集并到前面
@@ -186,32 +190,36 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 	//cout << "after filter:" << this->big_obejcts.size() << endl;
 	/*for (const auto &box : this->thing_boxes)
 		cout << "box area:" << box.rect.area() << endl;*/
-	//将轮廓以及大物体画出来
-	RNG g_rng(12345);
-	Mat dst = Mat::zeros(ForemaskImage.size(), CV_8UC3);
-	for (int i = 0; i< contours.size(); i++)
-	{
-		//cout << "轮廓点数: " << contours[i].size() << endl;
-		Scalar color = Scalar(g_rng.uniform(0, 255), g_rng.uniform(0, 255), g_rng.uniform(0, 255));//任意值
-		const vector<Point>& c = contours[i];
-		double area = contourArea(Mat(c));
-		if (area>this->small_area_threshold)
-			drawContours(dst, contours, i, color, cv::FILLED, 8, hierarchy);
-	}
-	for (int i = 0; i < big_obejcts.size(); ++i)
-	{
-		int x1 = big_obejcts[i].box.x1;
-		int x3 = big_obejcts[i].box.x3;
-		int y1 = big_obejcts[i].box.y1;
-		int y3 = big_obejcts[i].box.y3;
-		cv::rectangle(dst, Point(x1, y1),
-			Point(x3, y3),
-			cv::Scalar(255, 255, 255));
-	}
-	cout << "spend time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
-	//namedWindow("couters", 0);
-	//imshow("couters", dst);
-	//cv::waitKey(1);
+    if (show_flag)
+    {
+        //将轮廓以及大物体画出来
+        RNG g_rng(12345);
+        Mat dst = Mat::zeros(ForemaskImage.size(), CV_8UC3);
+        for (int i = 0; i< contours.size(); i++)
+        {
+            //cout << "轮廓点数: " << contours[i].size() << endl;
+            Scalar color = Scalar(g_rng.uniform(0, 255), g_rng.uniform(0, 255), g_rng.uniform(0, 255));//任意值
+            const vector<Point>& c = contours[i];
+            double area = contourArea(Mat(c));
+            if (area>this->small_area_threshold)
+                drawContours(dst, contours, i, color, cv::FILLED, 8, hierarchy);
+        }
+        for (int i = 0; i < big_obejcts.size(); ++i)
+        {
+            int x1 = big_obejcts[i].box.x1;
+            int x3 = big_obejcts[i].box.x3;
+            int y1 = big_obejcts[i].box.y1;
+            int y3 = big_obejcts[i].box.y3;
+            cv::rectangle(dst, Point(x1, y1),
+                Point(x3, y3),
+                cv::Scalar(255, 255, 255));
+        }
+        namedWindow("kd-tree_couters", 0);
+        imshow("kd-tree_couters", dst);
+    }
+	
+	//cout << "spend time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
+	
 }
 void ThingKalmanTracker::ThingBox_Filter()
 {
@@ -248,4 +256,6 @@ void ThingKalmanTracker::ThingBox_Filter()
 			this->big_obejcts.erase(big_obejcts.begin() + i);
 		}
 	}
+}
+
 }
