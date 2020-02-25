@@ -1,7 +1,7 @@
 #include"Fore_extraction.h"
 namespace hlg
 {
-    ForeExtraction::ForeExtraction(const double &inputFrame_rows, const double &inputFrame_cols, bool show_flag )
+    ThingInterface::ForeExtraction::ForeExtraction(const double &inputFrame_rows, const double &inputFrame_cols, bool show_flag )
     {
         this->show_flag = show_flag;
         frame_buff.reserve(init_background_frame_length);
@@ -10,7 +10,7 @@ namespace hlg
         //cout << "scaledSize:" << scaledSize.width << " " << scaledSize.height << endl;
         model = createBackgroundSubtractorKNN(history, dist2thrshold, detectShadow);
     }
-    bool ForeExtraction::extract(const Mat &inputFrame, Mat &foregroundMask)
+    bool ThingInterface::ForeExtraction::extract(const Mat &inputFrame, Mat &foregroundMask)
     {
         Mat src = inputFrame.clone();
         resize(src, src, scaledSize, 0, 0, INTER_LINEAR);
@@ -56,7 +56,7 @@ namespace hlg
 
     }
     // show background image
-    void ForeExtraction::getBackgroundImage(Mat&background)
+    void ThingInterface::ForeExtraction::getBackgroundImage(Mat&background)
     {
         model->getBackgroundImage(background);
     }

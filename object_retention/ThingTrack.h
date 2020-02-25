@@ -1,5 +1,6 @@
 #pragma once
 #include"myFunction.h"
+#include"ThingInterface.h"
 namespace hlg
 {
     class Thing
@@ -16,15 +17,17 @@ namespace hlg
         int confidence_inc;
         int confidence_dec;
     };
-    class ThingTracker//由于是判断物体滞留，因此个人感觉没有必要使用kalman进行运动估计徒增计算量，故把kalman去除了，匈牙利匹配依然保留
+    class ThingInterface::ThingTracker//由于是判断物体滞留，因此个人感觉没有必要使用kalman进行运动估计徒增计算量，故把kalman去除了，匈牙利匹配依然保留
     {
     public:
         ThingTracker(string thing_name = "th");
         void track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI);
-        vector<Thing> tracking_things;
-    
+        vector<vector<int>>&GetThingsInfo();
+        
 
     private:
+        vector<Thing> tracking_things;
+        vector<vector<int>>ThingsInfo;//x1 y1 x3 y3 frame
         string name;
         vector<bool> idTabel;
         void idTabelDelete(int id);

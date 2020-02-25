@@ -44,14 +44,14 @@ void MyObejctBox::Update_Box(const std::vector<cv::Point>&points)
 		this->rect = Rect(this->x1, this->y1, (this->x3) - (this->x1) + 1, (this->y3) - (this->y1) + 1);
 	}
 }
-ThingDetector::ThingDetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
+ThingInterface::ThingDetector::ThingDetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
 {
 	this->big_area_threshold = big_area_threshold;
 	this->small_area_threshold = small_area_threshold;
 	this->distance_threshold = distance_threshold;
     this->show_flag = show_flag;
 }
-void ThingDetector::ThingsDetect(const Mat& ForemaskImage)
+void ThingInterface::ThingDetector::ThingsDetect(const Mat& ForemaskImage)
 {
     
 	//首先初始化MyBigObejcts
@@ -220,7 +220,7 @@ void ThingDetector::ThingsDetect(const Mat& ForemaskImage)
 	//cout << "spend time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
 	
 }
-void ThingDetector::ThingBox_Filter()
+void ThingInterface::ThingDetector::ThingBox_Filter()
 {
 	//根据一些自定义的规则，如长宽比，交并比等，对检测出来的前景框进行一些合并及删除
 	//首先将矩形按照面积从大到小进行排序
@@ -256,14 +256,14 @@ void ThingDetector::ThingBox_Filter()
 		}
 	}
 }
-void ThingDetector::SetOutputCoordScale(const double OriginImage_Height, const double OriginImage_Width, Size Current_Size)
+void ThingInterface::ThingDetector::SetOutputCoordScale(const double OriginImage_Height, const double OriginImage_Width, Size Current_Size)
 {
     static bool Execute_Once_Flag = true;
     if(Execute_Once_Flag)
     ScaleFactor_Height = OriginImage_Height / double(Current_Size.height);
     ScaleFactor_Width = OriginImage_Width / double(Current_Size.width);
 }
-void ThingDetector::Filter_People(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
+void ThingInterface::ThingDetector::Filter_People(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
 {
     static double iou_threshold = 0.5;
     for (int i = things_boxes.size()-1; i >=0 ; --i)
@@ -282,7 +282,7 @@ void ThingDetector::Filter_People(vector<Rect>&things_boxes,const vector<Rect>&p
         }
     }
 }
-void ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
+void ThingInterface::ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
 {
     things_boxes.clear();
     things_boxes.reserve(this->big_obejcts.size());

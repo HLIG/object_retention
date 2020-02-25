@@ -1,5 +1,6 @@
 #pragma once
 #include"myFunction.h"
+#include"ThingInterface.h"
 namespace hlg
 {
 
@@ -66,7 +67,7 @@ public:
 	~MyBigObejct() {};
 	
 };
-class ThingDetector 
+class ThingInterface::ThingDetector
 {
 private:
 	float big_area_threshold;//大物体面积阈值，大于这个阈值的被判断为大件物体

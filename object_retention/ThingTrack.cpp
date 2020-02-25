@@ -30,14 +30,28 @@ namespace hlg
 
         return true;
     }
-    ThingTracker::ThingTracker(string thing_name)
+    vector<vector<int>> &ThingInterface::ThingTracker::GetThingsInfo()
+    {
+        ThingsInfo.clear();
+        const int size = tracking_things.size();
+        ThingsInfo.resize(size);
+        for (int i = 0; i < size; ++i)
+        {
+            ThingsInfo[i] = { tracking_things[i].box.x,tracking_things[i].box.y,
+                tracking_things[i].box.x + tracking_things[i].box.width - 1,
+                tracking_things[i].box.y + tracking_things[i].box.height - 1,
+                int(tracking_things[i].track_frame)};
+        }
+        return ThingsInfo;
+    }
+    ThingInterface::ThingTracker::ThingTracker(string thing_name)
     {
         tracking_things.clear();
         name = thing_name;
         idTabel.push_back(true);	//id 0 is always used
 
     }
-    int ThingTracker::idCreator()
+    int ThingInterface::ThingTracker::idCreator()
     {
         unsigned int id = 0;
         while (idTabel[id])
@@ -53,7 +67,7 @@ namespace hlg
 
         return id;
     }
-    void ThingTracker::idTabelDelete(int id)
+    void ThingInterface::ThingTracker::idTabelDelete(int id)
     {
         idTabel[id] = false;
 
@@ -61,7 +75,7 @@ namespace hlg
             idTabel.pop_back();
     }
 
-    void ThingTracker::track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI)
+    void ThingInterface::ThingTracker::track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI)
     {
         vector<Rect>detected_rects = Thing_Detected;
         //首先去除重合面积比较小的，即在roi外面的检测结果
