@@ -9,10 +9,10 @@ namespace hlg
     {
     public:
         ForeExtraction(const double &inputFrame_rows, const double &inputFrame_cols, bool show_flag=false);
+
         Size scaledSize;//前景提取图片大小
         bool extract(const Mat & inputFrame, Mat &foregroundMask);
-        void getBackgroundImage(Mat&background);
-   
+        
     private:
         const int init_background_length = 600;//开始的600帧不断循环，当作背景建模
         const int init_background_frame_length = 2;//从摄像头读取前面2帧当作背景
@@ -26,6 +26,7 @@ namespace hlg
         const int history = 20000;
         const double dist2thrshold = 2500;
         const bool detectShadow = true;//检测阴影
+        void getBackgroundImage(Mat&background);
     };
 
     

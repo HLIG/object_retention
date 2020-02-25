@@ -1,4 +1,4 @@
-#include"fore_extraction.h"
+#include"Fore_extraction.h"
 namespace hlg
 {
     ForeExtraction::ForeExtraction(const double &inputFrame_rows, const double &inputFrame_cols, bool show_flag )

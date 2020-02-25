@@ -1,6 +1,5 @@
 #pragma once
-#include"KalmanTracker.h"
-
+#include"myFunction.h"
 namespace hlg
 {
 
@@ -67,7 +66,7 @@ public:
 	~MyBigObejct() {};
 	
 };
-class ThingKalmanTracker :public KalmanTracker
+class ThingDetector 
 {
 private:
 	float big_area_threshold;//大物体面积阈值，大于这个阈值的被判断为大件物体
@@ -77,13 +76,17 @@ private:
 	const double intersection_small_rate = 0.4;//最后对大物体合并的阈值
 	const double aspect_ratio_threshold = 4.0;//将不符合长宽比要求的检测框剔除
     bool show_flag;//true则显示处理结果
+    double ScaleFactor_Width;
+    double ScaleFactor_Height;
+    std::vector<MyBigObejct>big_obejcts;
+    void ThingBox_Filter();//根据一些自定义的规则，如长宽比，交并比等，对检测出来的前景框进行一些合并及删除
+    void Filter_People(vector<Rect>&things_boxes, const vector<Rect>&people_boxes);//根据iou把人头滤除掉
 public:
-	std::vector<MyBigObejct>big_obejcts;
-	ThingKalmanTracker(const float &area_threshold = 3000.0, const float& small_area_threshold = 1000.0, const float& distance_threshold = 70.0,bool show_flag=false);
-	~ThingKalmanTracker() {}
-	void ThingsDetector(const Mat &ForemaskImage);//根据前景图来把物体检测出来
-	void ThingBox_Filter();//根据一些自定义的规则，如长宽比，交并比等，对检测出来的前景框进行一些合并及删除
-	void Filter_People(const vector<Rect>&people_boxes) {}//根据iou把人头滤除掉
+    ThingDetector(const float &area_threshold = 3000.0, const float& small_area_threshold = 1000.0, const float& distance_threshold = 70.0,bool show_flag=false);
+	~ThingDetector() {}
+	void ThingsDetect(const Mat &ForemaskImage);//根据前景图来把物体检测出来
+    void SetOutputCoordScale(double OriginImage_Height, double OriginImage_Width,Size Current_Size);
+    void Get_Thing_Result(vector<Rect>&things_boxes, const vector<Rect>&people_boxes);//坐标转换，同时根据iou把人头滤除掉
 };
 
 }

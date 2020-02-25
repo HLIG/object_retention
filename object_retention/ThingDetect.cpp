@@ -1,4 +1,4 @@
-#include"KalmanTracker_TH.h"
+#include"ThingDetect.h"
 #include"kd_tree.h"
 namespace hlg
 {
@@ -44,14 +44,14 @@ void MyObejctBox::Update_Box(const std::vector<cv::Point>&points)
 		this->rect = Rect(this->x1, this->y1, (this->x3) - (this->x1) + 1, (this->y3) - (this->y1) + 1);
 	}
 }
-ThingKalmanTracker::ThingKalmanTracker(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
+ThingDetector::ThingDetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
 {
 	this->big_area_threshold = big_area_threshold;
 	this->small_area_threshold = small_area_threshold;
 	this->distance_threshold = distance_threshold;
     this->show_flag = show_flag;
 }
-void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
+void ThingDetector::ThingsDetect(const Mat& ForemaskImage)
 {
     
 	//首先初始化MyBigObejcts
@@ -103,7 +103,7 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 				int y_1 = max(big_obejcts[i].box.y1, big_obejcts[j].box.y1);//比y_2大则在y方向无交集
 				int y_2 = min(big_obejcts[i].box.y3, big_obejcts[j].box.y3);
 				if ((x_1 - x_2) < int(this->big_area_distance) && (y_1 - y_2) < int(this->big_area_distance))
-				{
+				{//对与外接矩形离的比较近的两个大轮廓，进行kd树查询，如果查询的距离结果比较小，则将大轮廓进行合并
 					const vector<Point> &contour = big_obejcts[j].contour_points;
 					vector<Contour_Point>contour_points(contour.size());
 					int point_count = 0;
@@ -124,7 +124,7 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 							min_distance = distance;
 						}
 					}
-					if (min_distance < this->big_area_distance) {
+					if (min_distance < this->big_area_distance) {//kd树查询的距离结果比较近，需要将两个大物体进行合并
 						//cout << "min_distance:" << min_distance << endl;
 						big_obejcts[j].contour_points.reserve(big_obejcts[j].contour_points.size()+ big_obejcts[i].contour_points.size());//将最后一个点集并到前面
 						big_obejcts[j].contour_points.insert(big_obejcts[j].contour_points.end(), big_obejcts[i].contour_points.begin(), big_obejcts[i].contour_points.end());
@@ -132,13 +132,12 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 						big_obejcts[j].box.Update_coordinates();
 						big_obejcts.erase(big_obejcts.begin() + i);//删除最后一个点集
 						sort(big_obejcts.begin(), big_obejcts.end(),
-							[](const MyBigObejct &A, const MyBigObejct &B) {return A.contour_points.size() > B.contour_points.size(); });//重新根据点集数目排序
+							[](const MyBigObejct &A, const MyBigObejct &B) {return A.contour_points.size() > B.contour_points.size(); });//重新根据点集数目排序，达到减少计算量的效果。emmm如有疑惑可以算下kd树的时间复杂度
 					}
 				}		
 			}
 		}
 	}
-
 
 	//面积小的物体归到最近的面积大的物体中
 	if (small_contour_ids.size() > 0 && big_obejcts.size() > 0)
@@ -200,16 +199,16 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
             //cout << "轮廓点数: " << contours[i].size() << endl;
             Scalar color = Scalar(g_rng.uniform(0, 255), g_rng.uniform(0, 255), g_rng.uniform(0, 255));//任意值
             const vector<Point>& c = contours[i];
-            double area = contourArea(Mat(c));
+            const double area = contourArea(Mat(c));
             if (area>this->small_area_threshold)
                 drawContours(dst, contours, i, color, cv::FILLED, 8, hierarchy);
         }
         for (int i = 0; i < big_obejcts.size(); ++i)
         {
-            int x1 = big_obejcts[i].box.x1;
-            int x3 = big_obejcts[i].box.x3;
-            int y1 = big_obejcts[i].box.y1;
-            int y3 = big_obejcts[i].box.y3;
+            const int x1 = big_obejcts[i].box.x1;
+            const int x3 = big_obejcts[i].box.x3;
+            const int y1 = big_obejcts[i].box.y1;
+            const int y3 = big_obejcts[i].box.y3;
             cv::rectangle(dst, Point(x1, y1),
                 Point(x3, y3),
                 cv::Scalar(255, 255, 255));
@@ -221,7 +220,7 @@ void ThingKalmanTracker::ThingsDetector(const Mat& ForemaskImage)
 	//cout << "spend time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
 	
 }
-void ThingKalmanTracker::ThingBox_Filter()
+void ThingDetector::ThingBox_Filter()
 {
 	//根据一些自定义的规则，如长宽比，交并比等，对检测出来的前景框进行一些合并及删除
 	//首先将矩形按照面积从大到小进行排序
@@ -248,7 +247,7 @@ void ThingKalmanTracker::ThingBox_Filter()
 			}		
 		}
 	}
-	//删除长宽比奇怪的检测框
+	//删除长宽比奇怪的检测框emmmm
 	for (int i = this->big_obejcts.size() - 1; i >= 0; --i){
 		const double aspect_ratio = double(this->big_obejcts[i].box.rect.width) / double(this->big_obejcts[i].box.rect.height);
 		//cout << "aspect_ratio:" << aspect_ratio << endl;
@@ -257,5 +256,48 @@ void ThingKalmanTracker::ThingBox_Filter()
 		}
 	}
 }
-
+void ThingDetector::SetOutputCoordScale(const double OriginImage_Height, const double OriginImage_Width, Size Current_Size)
+{
+    static bool Execute_Once_Flag = true;
+    if(Execute_Once_Flag)
+    ScaleFactor_Height = OriginImage_Height / double(Current_Size.height);
+    ScaleFactor_Width = OriginImage_Width / double(Current_Size.width);
 }
+void ThingDetector::Filter_People(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
+{
+    static double iou_threshold = 0.5;
+    for (int i = things_boxes.size()-1; i >=0 ; --i)
+    {
+        const Rect&rect_th = things_boxes[i];
+        for (int j = 0; j < people_boxes.size(); ++j)
+        {
+            const Rect&rect_pp = people_boxes[j];
+            const cv::Rect And = rect_th | rect_pp;
+            const cv::Rect Union = rect_th & rect_pp;
+            const double iou= double(Union.area()*1.0 / And.area());//去掉于people_box的iou比较大的things_box
+            if (iou > iou_threshold)
+            {
+                things_boxes.erase(things_boxes.begin() + i);
+            }         
+        }
+    }
+}
+void ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
+{
+    things_boxes.clear();
+    things_boxes.reserve(this->big_obejcts.size());
+    //尺度转换
+    for (int i = 0; i < this->big_obejcts.size(); ++i)
+    {
+        const int &x1 = big_obejcts[i].box.x1;
+        const int &y1 = big_obejcts[i].box.y1;
+        const int &width = big_obejcts[i].box.rect.width;
+        const int &height = big_obejcts[i].box.rect.height;
+        Rect rect(x1* ScaleFactor_Width, y1*ScaleFactor_Height, width* ScaleFactor_Width, height*ScaleFactor_Height);
+        things_boxes.push_back(rect);//尺度转换
+    }
+    //根据iou滤除行人检测框
+    Filter_People(things_boxes, people_boxes);
+}
+}
+
