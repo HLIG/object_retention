@@ -75,20 +75,10 @@ namespace hlg
             idTabel.pop_back();
     }
 
-    void ThingInterface::ThingTracker::track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI)
+    void ThingInterface::ThingTracker::track(const vector<Rect>&Thing_Detected )
     {
         vector<Rect>detected_rects = Thing_Detected;
-        //首先去除重合面积比较小的，即在roi外面的检测结果
-        const double area_ratio_threshold = 0.5;
-        for (int i= detected_rects.size()-1;i>=0;--i)
-        {
-            const auto & detected_rect = detected_rects[i];
-            const double area_ratio = ((detected_rect&Thing_ROI).area()*1.0) / detected_rect.area();
-            if (area_ratio < area_ratio_threshold)//删除ROI内面积占比比较小的
-            {
-                detected_rects.erase(detected_rects.begin() + i);
-            }
-        }
+        
 
         //计算距离矩阵
         std::vector<cv::Rect>tracking_boxes;
@@ -150,21 +140,21 @@ namespace hlg
             tracking_things[iter.second].box=detected_rects[iter.first];//用检测结果来更新跟踪结果
         }
         //对于距离太远的跟踪目标,需要降低其置信度,置信度低于一定值,将其从后往前删除
-        for (vector<Thing>::iterator k = tracking_things.end() - 1; k != tracking_things.begin() - 1; k--)
+        for (int i = tracking_things.size() - 1; i >= 0; --i)
         {
-            if (cols_set.find(std::distance(tracking_things.begin(), k)) != cols_set.end())//如果匈牙利匹配成功
+            if (cols_set.find(i) != cols_set.end())//如果匈牙利匹配成功
                 continue;
-            else if (!(*k).confidenceDecrease())//置信度减到0以下,剔除该目标
+            else if (!tracking_things[i].confidenceDecrease())//置信度减到0以下,剔除该目标
             {
-                idTabelDelete((*k).id);
-                tracking_things.erase(k);
+                idTabelDelete(tracking_things[i].id);
+                tracking_things.erase(tracking_things.begin()+i);
             }
             else//置信度没减到0以下,算作跟踪成功，帧数+1
             {
-                (*k).track_frame++;//跟踪帧数增加
+                tracking_things[i].track_frame++;//跟踪帧数增加
             }
-
         }
+        
         //对于距离太远的检测目标,将其作为新目标,加入到跟踪列表中
         for (int i = 0; i<detected_rects.size(); i++)
         {

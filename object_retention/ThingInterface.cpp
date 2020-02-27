@@ -37,9 +37,9 @@ namespace hlg
     {
         thingdetector->SetOutputCoordScale(OriginImage_Height, OriginImage_Width, Current_Size);
     }
-    void ThingInterface::detect_Get_Thing_Result(vector<Rect>&things_boxes, const vector<Rect>&people_boxes)
+    void ThingInterface::detect_Get_Thing_Result(vector<Rect>&things_boxes, const vector<Rect>&people_boxes,const Rect& thROI)
     {
-        thingdetector->Get_Thing_Result(things_boxes, people_boxes);
+        thingdetector->Get_Thing_Result(things_boxes, people_boxes,thROI);
     }
 
     //物体检测end
@@ -52,14 +52,13 @@ namespace hlg
             delete thingtracker;
         thingtracker = new ThingTracker();
     }
-    void ThingInterface::track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI)
+    void ThingInterface::track(const vector<Rect>&Thing_Detected)
     {
-        thingtracker->track(Thing_Detected, Thing_ROI);
+        thingtracker->track(Thing_Detected);
     }
     vector<vector<int>>& ThingInterface::track_GetThingsInfo()
     {
         return thingtracker->GetThingsInfo();
     }
     //物体跟踪end
-
 }

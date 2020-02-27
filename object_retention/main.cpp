@@ -19,8 +19,10 @@ int main(int argc, const char** argv)
 {
 	string video_path = "E:\\数据集\\扶梯\\地铁\\loucengban\\clip_video\\ch03_20170315060019_31.avi";
 	VideoCapture cap;
-	if(!cap.open(video_path))
+	if(!cap.open(0))//video_path
         printf("video/camera open failed!!!!!\n");
+    //cap.set(CAP_PROP_FRAME_HEIGHT, 480);
+    //cap.set(CAP_PROP_FRAME_WIDTH, 640);
     ThingInterface thing_interface;
     thing_interface.create_ForeExtraction(cap.get(CAP_PROP_FRAME_HEIGHT), cap.get(CAP_PROP_FRAME_WIDTH), false);
     thing_interface.create_Thingdetector();
@@ -28,7 +30,7 @@ int main(int argc, const char** argv)
     //ForeExtraction fore_extracter();
 	Mat inputFrame, foregroundMask;
     
-    Rect setROI = Rect(0, 0, int(cap.get(CAP_PROP_FRAME_WIDTH)), int(cap.get(CAP_PROP_FRAME_WIDTH)));
+    Rect setROI = Rect(100, 50, int(0.6*int(cap.get(CAP_PROP_FRAME_WIDTH))), int(0.7*int(cap.get(CAP_PROP_FRAME_WIDTH))));
     //clock_t total_time=0;
 	for (int i = 0;; i++)
 	{
@@ -47,18 +49,19 @@ int main(int argc, const char** argv)
             std::call_once(SetOutputCoordScale_flag, SetOutputCoordScale_fun, cap.get(CAP_PROP_FRAME_HEIGHT), cap.get(CAP_PROP_FRAME_WIDTH), thing_interface.fore_getScaledSize());
             static vector<Rect>Thing_Detected;
             static vector<Rect>people_boxes;//由于是测试，所以没有行人检测结果，设为空即可
-            thing_interface.detect_Get_Thing_Result(Thing_Detected, people_boxes);//滤除行人，并进行尺度变换
-            thing_interface.track(Thing_Detected, setROI);
+            thing_interface.detect_Get_Thing_Result(Thing_Detected, people_boxes, setROI);//滤除行人，并进行尺度变换
+            thing_interface.track(Thing_Detected);
             cout << "main time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
             //total_time += clock() - start_time;
             const int retention_frame_threshold = 40;//滞留帧数阈值
             const vector<vector<int>>&tracking_result = thing_interface.track_GetThingsInfo();
             for (int i = 0; i < tracking_result.size(); ++i)
             {
-                const int & x1 = tracking_result[i][0];
-                const int & y1 = tracking_result[i][1];
-                const int &x3 = tracking_result[i][2];
-                const int &y3 = tracking_result[i][3];
+                const int  x1 = max(tracking_result[i][0], setROI.x);
+                const int  y1 = max(tracking_result[i][1], setROI.y);
+                const int x3 = min(tracking_result[i][2], setROI.x+setROI.width-1);
+                const int y3 = min(tracking_result[i][3], setROI.y + setROI.height - 1);
+
                 const int &track_frame = tracking_result[i][4];
                 if (track_frame > retention_frame_threshold)
                 {//达到滞留帧数阈值，用红色画框
@@ -70,9 +73,10 @@ int main(int argc, const char** argv)
                 {
                     cv::rectangle(inputFrame, Point(x1, y1),
                         Point(x3, y3),
-                        cv::Scalar(255, 255, 255));
+                        cv::Scalar(0, 255, 255));
                 }                   
-            }    
+            } 
+            cv::rectangle(inputFrame, setROI, (255, 255, 255), 1);
             namedWindow("result_image", 0);
             imshow("result_image", inputFrame);
             // interact with user

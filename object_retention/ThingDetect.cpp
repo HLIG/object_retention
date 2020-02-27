@@ -44,11 +44,12 @@ void MyObejctBox::Update_Box(const std::vector<cv::Point>&points)
 		this->rect = Rect(this->x1, this->y1, (this->x3) - (this->x1) + 1, (this->y3) - (this->y1) + 1);
 	}
 }
-ThingInterface::ThingDetector::ThingDetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold,bool show_flag)
+ThingInterface::ThingDetector::ThingDetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold, const float& big_area_distance,bool show_flag)
 {
 	this->big_area_threshold = big_area_threshold;
 	this->small_area_threshold = small_area_threshold;
 	this->distance_threshold = distance_threshold;
+    this->big_area_distance = big_area_distance;
     this->show_flag = show_flag;
 }
 void ThingInterface::ThingDetector::ThingsDetect(const Mat& ForemaskImage)
@@ -94,12 +95,16 @@ void ThingInterface::ThingDetector::ThingsDetect(const Mat& ForemaskImage)
 		[](const MyBigObejct &A, const MyBigObejct &B) {return A.contour_points.size() > B.contour_points.size(); });
 	if (big_obejcts.size() >= 2)
 	{
+        //cout << "start:" << endl;
 		for (int i = big_obejcts.size() - 1; i >= 0; --i)
 		{
+            //cout << "i:"<<i << endl;
 			for (int j = i-1; j >= 0; --j)
 			{
-				int x_1 = max(big_obejcts[i].box.x1, big_obejcts[j].box.x1);//比x_2大则在x方向无交集
-				int x_2 = min(big_obejcts[i].box.x3, big_obejcts[j].box.x3);
+                //cout << "j:" << j << endl;
+                int x_1= max(big_obejcts[i].box.x1, big_obejcts[j].box.x1);//比x_2大则在x方向无交集
+
+                int x_2 = min(big_obejcts[i].box.x3, big_obejcts[j].box.x3);
 				int y_1 = max(big_obejcts[i].box.y1, big_obejcts[j].box.y1);//比y_2大则在y方向无交集
 				int y_2 = min(big_obejcts[i].box.y3, big_obejcts[j].box.y3);
 				if ((x_1 - x_2) < int(this->big_area_distance) && (y_1 - y_2) < int(this->big_area_distance))
@@ -133,7 +138,8 @@ void ThingInterface::ThingDetector::ThingsDetect(const Mat& ForemaskImage)
 						big_obejcts.erase(big_obejcts.begin() + i);//删除最后一个点集
 						sort(big_obejcts.begin(), big_obejcts.end(),
 							[](const MyBigObejct &A, const MyBigObejct &B) {return A.contour_points.size() > B.contour_points.size(); });//重新根据点集数目排序，达到减少计算量的效果。emmm如有疑惑可以算下kd树的时间复杂度
-					}
+                        break;
+                    }
 				}		
 			}
 		}
@@ -265,16 +271,16 @@ void ThingInterface::ThingDetector::SetOutputCoordScale(const double OriginImage
 }
 void ThingInterface::ThingDetector::Filter_People(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
 {
-    static double iou_threshold = 0.5;
+    static double iou_threshold = 0.8;
     for (int i = things_boxes.size()-1; i >=0 ; --i)
     {
         const Rect&rect_th = things_boxes[i];
         for (int j = 0; j < people_boxes.size(); ++j)
         {
             const Rect&rect_pp = people_boxes[j];
-            const cv::Rect And = rect_th | rect_pp;
+            //const cv::Rect And = rect_th | rect_pp;
             const cv::Rect Union = rect_th & rect_pp;
-            const double iou= double(Union.area()*1.0 / And.area());//去掉于people_box的iou比较大的things_box
+            const double iou= double(Union.area()*1.0 / rect_pp.area());//去掉与people_box重叠面积比较大的things_box
             if (iou > iou_threshold)
             {
                 things_boxes.erase(things_boxes.begin() + i);
@@ -282,7 +288,7 @@ void ThingInterface::ThingDetector::Filter_People(vector<Rect>&things_boxes,cons
         }
     }
 }
-void ThingInterface::ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,const vector<Rect>&people_boxes)
+void ThingInterface::ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,const vector<Rect>&people_boxes, const Rect& thROI)
 {
     things_boxes.clear();
     things_boxes.reserve(this->big_obejcts.size());
@@ -298,6 +304,20 @@ void ThingInterface::ThingDetector::Get_Thing_Result(vector<Rect>&things_boxes,c
     }
     //根据iou滤除行人检测框
     Filter_People(things_boxes, people_boxes);
+
+    //根据设定ROI进行一波过滤，去除重合面积比较小的，即在roi外面的检测结果
+    const double area_ratio_threshold = 0.8;//如果ROI内的面积超过大物体面积阈值的80%，则保留
+    for (int i = things_boxes.size() - 1; i >= 0; --i)
+    {
+        const auto & detected_rect = things_boxes[i];
+        const Rect Inter_rect = detected_rect&thROI;
+        const double Inter_area = Inter_rect.area()*1.0 ;
+        const double aspect_ratio = double(Inter_rect.width) / double(Inter_rect.height);
+        if ((Inter_area < area_ratio_threshold*this->big_area_threshold)||( aspect_ratio > this->aspect_ratio_threshold) ||( aspect_ratio < (1.0 / this->aspect_ratio_threshold)))//删除ROI内面积占比比较小的以及长宽比很奇怪的
+        {
+            things_boxes.erase(things_boxes.begin() + i);
+        }
+    }
 }
 }
 

@@ -21,7 +21,7 @@ namespace hlg
     {
     public:
         ThingTracker(string thing_name = "th");
-        void track(const vector<Rect>&Thing_Detected, const Rect &Thing_ROI);
+        void track(const vector<Rect>&Thing_Detected);
         vector<vector<int>>&GetThingsInfo();
         
 
