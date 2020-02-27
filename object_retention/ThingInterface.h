@@ -27,14 +27,14 @@ namespace hlg
         //前景提取end
 
         //物体检测
-        void ThingInterface::create_Thingdetector();
+        void create_Thingdetector();
         void detect_ThingsDetect(const Mat &ForemaskImage);//根据前景图来把物体检测出来
         void detect_SetOutputCoordScale(double OriginImage_Height, double OriginImage_Width, Size Current_Size);
         void detect_Get_Thing_Result(vector<Rect>&things_boxes, const vector<Rect>&people_boxes, const Rect& thROI);//坐标转换，同时根据iou把人头滤除掉
         //物体检测end
         
         //物体跟踪
-        void ThingInterface::create_Thingtracker();
+        void create_Thingtracker();
         void track(const vector<Rect>&Thing_Detected);
         vector<vector<int>>& track_GetThingsInfo();
         //物体跟踪end
