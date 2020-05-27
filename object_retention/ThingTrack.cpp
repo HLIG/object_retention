@@ -19,6 +19,7 @@ namespace hlg
 
     bool Thing::confidenceDecrease()
     {
+        
         confidence_dec++;
         confidence_inc = 0;
         confidence -= pow(1.5f, confidence_dec);

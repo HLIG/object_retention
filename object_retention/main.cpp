@@ -17,20 +17,23 @@ using namespace hlg;
 
 int main(int argc, const char** argv)
 {
-	string video_path = "E:\\数据集\\扶梯\\地铁\\loucengban\\clip_video\\ch03_20170315060019_31.avi";
+    string video_path="D:\\opencv4.2\\opencv\\sources\\samples\\python\\tutorial_code\\video\\background_subtraction\\test2.avi";
+	//string video_path = "E:\\数据集\\扶梯\\地铁\\loucengban\\clip_video\\ch03_20170315060019_31.avi";
 	VideoCapture cap;
-	if(!cap.open(0))//video_path
+	if(!cap.open(video_path))//video_path
         printf("video/camera open failed!!!!!\n");
     //cap.set(CAP_PROP_FRAME_HEIGHT, 480);
     //cap.set(CAP_PROP_FRAME_WIDTH, 640);
+    bool show_flag = true;
     ThingInterface thing_interface;
-    thing_interface.create_ForeExtraction(cap.get(CAP_PROP_FRAME_HEIGHT), cap.get(CAP_PROP_FRAME_WIDTH), false);
-    thing_interface.create_Thingdetector();
+    thing_interface.create_ForeExtraction(cap.get(CAP_PROP_FRAME_HEIGHT), cap.get(CAP_PROP_FRAME_WIDTH), show_flag);
+    thing_interface.create_Thingdetector( 3000.0,  1000.0, 70.0, 30.0,  show_flag);
     thing_interface.create_Thingtracker();
     //ForeExtraction fore_extracter();
 	Mat inputFrame, foregroundMask;
-    
-    Rect setROI = Rect(100, 50, int(0.6*int(cap.get(CAP_PROP_FRAME_WIDTH))), int(0.7*int(cap.get(CAP_PROP_FRAME_WIDTH))));
+    //设置感兴趣区域ROI
+    Rect setROI = Rect(0, 0, int(cap.get(CAP_PROP_FRAME_WIDTH)), int(cap.get(CAP_PROP_FRAME_WIDTH)));
+    /*Rect setROI = Rect(100, 50, int(0.6*int(cap.get(CAP_PROP_FRAME_WIDTH))), int(0.7*int(cap.get(CAP_PROP_FRAME_WIDTH))));*/
     //clock_t total_time=0;
 	for (int i = 0;; i++)
 	{
@@ -38,9 +41,11 @@ int main(int argc, const char** argv)
 		if (inputFrame.empty())
 		{
 			cout << "Finished reading: empty frame" << endl;
+            cv::waitKey(0);
 			break;
 		}
         clock_t start_time = clock();
+        
         if (thing_interface.fore_ExtractFore(inputFrame, foregroundMask))//提取前景
         {                        
             thing_interface.detect_ThingsDetect(foregroundMask);//从前景中提取出大件物体           

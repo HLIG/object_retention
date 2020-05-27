@@ -23,11 +23,11 @@ namespace hlg
 
 
     //ÎïÌå¼ì²â
-    void ThingInterface::create_Thingdetector()
+    void ThingInterface::create_Thingdetector(const float& big_area_threshold= 3000.0, const float& small_area_threshold = 1000.0, const float& distance_threshold = 70.0, const float& big_area_distance = 30.0, bool show_flag = false)
     {
         if (!thingdetector)
             delete thingdetector;
-        thingdetector= new ThingDetector();
+        thingdetector= new ThingDetector( big_area_threshold,  small_area_threshold,  distance_threshold,  big_area_distance,  show_flag);
     }
     void ThingInterface::detect_ThingsDetect(const Mat &ForemaskImage)
     {

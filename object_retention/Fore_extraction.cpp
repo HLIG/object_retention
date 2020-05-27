@@ -8,10 +8,12 @@ namespace hlg
         scaledSize = Size(image_width, image_width * int(inputFrame_rows) / int(inputFrame_cols));
         //printf("int(inputFrame_rows)=%d,int(inputFrame_cols)=%d\n", int(inputFrame_rows), int(inputFrame_cols));
         //cout << "scaledSize:" << scaledSize.width << " " << scaledSize.height << endl;
+        //model = createBackgroundSubtractorMOG2();
         model = createBackgroundSubtractorKNN(history, dist2thrshold, detectShadow);
     }
     bool ThingInterface::ForeExtraction::extract(const Mat &inputFrame, Mat &foregroundMask)
     {
+        
         Mat src = inputFrame.clone();
         resize(src, src, scaledSize, 0, 0, INTER_LINEAR);
         static int count = 0;
@@ -34,7 +36,9 @@ namespace hlg
         }
         else
         {
+            clock_t start_time = clock();
             model->apply(src, foregroundMask, learning_rate);
+            cout << "extract time:" << double(clock() - start_time) / CLOCKS_PER_SEC << endl;
             if (show_flag)
             {
                 static Mat foreground,background;
@@ -53,7 +57,7 @@ namespace hlg
             }
             return true;
         }
-
+        
     }
     // show background image
     void ThingInterface::ForeExtraction::getBackgroundImage(Mat&background)

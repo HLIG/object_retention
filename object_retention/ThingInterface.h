@@ -27,7 +27,7 @@ namespace hlg
         //前景提取end
 
         //物体检测
-        void create_Thingdetector();
+        void create_Thingdetector(const float& big_area_threshold, const float& small_area_threshold, const float& distance_threshold, const float& big_area_distance, bool show_flag);
         void detect_ThingsDetect(const Mat &ForemaskImage);//根据前景图来把物体检测出来
         void detect_SetOutputCoordScale(double OriginImage_Height, double OriginImage_Width, Size Current_Size);
         void detect_Get_Thing_Result(vector<Rect>&things_boxes, const vector<Rect>&people_boxes, const Rect& thROI);//坐标转换，同时根据iou把人头滤除掉
